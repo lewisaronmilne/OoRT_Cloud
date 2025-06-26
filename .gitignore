@@ -4,6 +4,10 @@
 data
 *.zip
 package-lock.json
+runApp.bat
+runMongoCmd.bat
+runMongoDb.bat
+runReset.bat
 
 # STUFF FROM GITHUB
 
