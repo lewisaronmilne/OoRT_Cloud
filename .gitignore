@@ -3,6 +3,7 @@
 .directory
 data
 *.zip
+package-lock.json
 
 # STUFF FROM GITHUB
 
