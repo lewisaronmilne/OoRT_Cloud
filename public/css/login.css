@@ -1,0 +1,25 @@
+#container {
+	width: 350px;
+}
+#message table {
+	width: 100%;
+}
+#message table p {
+	margin: 0;
+}
+#message table tr td {
+	vertical-align: middle;
+	padding: 5px 0px;
+}
+#message table tr td:nth-child(1) {
+	width: 0;
+}
+#message table tr td:nth-child(2) {
+	width: 100%;
+}
+#message input[type="text"] {
+	width: 100%;
+}
+#message input[type="password"] {
+	width: 100%;
+}

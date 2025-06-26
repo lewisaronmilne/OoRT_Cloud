@@ -1,0 +1,21 @@
+#message h2 {
+	font-size: 30px;
+	margin-bottom: 15px;
+}
+#message h3 {
+	font-size: 20px;
+	margin-bottom: 10px;
+}
+#container {
+	background-color: #aaa;
+	margin: 15px auto 0px;
+	border-radius: 15px;
+}
+#container .inner {
+	overflow: hidden;
+	padding: 20px 0px;
+	margin: 0px 20px; 
+}
+#message > *:last-child {
+	margin-bottom: 0px;
+}

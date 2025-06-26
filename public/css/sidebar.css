@@ -1,0 +1,20 @@
+#sidebar {
+	margin: 10px;
+}
+#sidebar #formContainer {
+	display: inline-block;
+	width: 100%;
+}
+#sidebar form #searchBox {
+	width: 100%;
+    box-sizing: border-box;
+}
+#sidebar form #submitBtn {
+	float: right;
+}
+#sidebar h2 {
+	margin-bottom: 5px;
+}
+#sidebar p {
+	margin-bottom: 0px;
+}

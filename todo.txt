@@ -1,0 +1,16 @@
+Accounts System
+	Editing
+Tags System
+	Editing
+	Heirarchy/Mandatory tags
+Voting
+	Actually does something
+Comments
+	Stacking/Replying
+	Voting
+Switch to code repo
+	Syntax Hilighting
+
+ToFix
+	Remove tokens after a time
+	Misc. Bugfixing

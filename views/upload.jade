@@ -1,0 +1,36 @@
+extend simple
+
+block head
+	link(rel="stylesheet", href="/css/upload.css")
+	title Upload ● OoRT Cloud
+
+block message 
+	#message
+		if page.failMessage
+			h3 #{page.failMessage}
+		form(enctype="multipart/form-data" method="POST")
+			table 
+				tr
+					td 
+						p #[b Name:]
+					td
+						input(type="text" name="name")
+				tr
+					td 
+						p #[b Lang:]
+					td
+						input(type="text" name="lang")
+				tr
+					td 
+						p #[b Code:]
+					td
+						textarea(name="code")
+				tr
+					td 
+						p #[b Tags:]
+					td
+						input(type="text" name="tags")
+				tr
+					td
+					td
+						input(type="submit" value="Upload file")

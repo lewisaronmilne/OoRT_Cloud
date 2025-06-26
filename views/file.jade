@@ -1,0 +1,45 @@
+extend simple
+
+block head
+	link(rel="stylesheet", href="/css/file.css")
+	if user
+		script(type="text/javascript").
+			fileId = !{ page.file._id };
+		script(type="text/javascript" src="/js/file.js")
+	title #{page.file.name} ● OoRT Cloud
+
+block message 
+	#message
+		table#titleTable 
+			tr
+				td
+					table
+						if user
+							tr: td
+								if page.vote === "up"
+									#upvote.on
+								else
+									#upvote.off
+							tr: td
+								#voteScore
+									p #[b [#{page.file.voteScore}]]
+							tr: td
+								if page.vote === "down"
+									#downvote.on
+								else
+									#downvote.off
+						else
+							tr: td
+								#voteScore
+									h2 #[b [#{page.file.voteScore}]]
+				td
+					h2 #[u #{page.file.name}]
+		#code
+			p #{page.file.code}
+		p #[b File id:] ##{page.file._id}
+		p #[b Uploaded by] #[a.boxedlink(href="/user/#{page.file.uploaderId._id}/#{page.file.uploaderId.username}") #{page.file.uploaderId.username}]
+		p #[b Tags:]
+			each val, index in page.file.tags
+				| #[a.boxedlink(href="/?q=#{val._id}") #{val._id}#[b (#{val.ammount})]]
+		- if (user || page.file.comments.length > 0)
+			include comments

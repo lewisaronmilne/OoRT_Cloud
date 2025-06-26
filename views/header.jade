@@ -1,0 +1,16 @@
+link(rel="stylesheet" href="/css/header.css")
+
+#header
+	a(href="/")
+		#titlebox
+			h1 OoRT Cloud
+	#linkbox
+		if user
+			p
+				| #[a.boxedlink(href="/") Home]#[a.boxedlink(href="/upload") Upload]
+				| #[span Logged in as:]#[a.boxedlink(href="/user/#{user._id}/#{user.username}") #{user.username}]
+				| #[a.boxedlink(href="/logout") Logout]
+		else 
+			p
+				| #[a.boxedlink(href="/") Home]#[a.boxedlink(href="/upload") Upload]
+				| #[a.boxedlink(href="/login") Login]#[a.boxedlink(href="/register") Register]

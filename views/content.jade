@@ -1,0 +1,29 @@
+link(rel="stylesheet" href="/css/content.css")
+
+#content
+	mixin resultLoop
+		table 
+			each val, index in page.results
+				tr
+					td
+						p [#{val.voteScore}]
+					td
+						p #[a(href="/file/#{val._id}") #{val.name}]
+						
+	case page.num
+		when -1
+			h2 #[b Welcome to OoRT Cloud]
+			#spiel
+				p.p2 OoRT Cloud is the #[u O]pen #[u R]epository for #[u T]eachers. It is a place where anybody can upload and help organise code for use within schools and elsewhere.
+				p.p2 All types of code are allowed so long as they are tagged appropiately.
+				p.p2 You can search and browse for tags using the side bar to the left.
+			h3 #[u Most Recent Uploads]
+			+resultLoop
+		when 0
+			h3 #[u Search for #[i "#{page.query}"] returned no results]
+		when 1
+			h3 #[u Search for #[i "#{page.query}"] returned 1 result]
+			+resultLoop
+		default
+			h3 #[u Search for #[i "#{page.query}"] returned #{page.num} results]
+			+resultLoop

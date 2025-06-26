@@ -1,0 +1,42 @@
+#comments {
+	margin-top: 5px;
+}
+#comments table {
+	width: 100%;
+	background-color: #FFF;
+	border-radius: 10px;
+	padding: 0px 10px;
+}
+#comments table tr td:nth-child(1) {
+	vertical-align: middle;
+	width: 0;
+	padding: 5px 0px;
+}
+#comments table tr td:nth-child(2) {
+	width: 100%;
+	padding: 5px 5px 0px;
+}
+#comments table tr:nth-child(2) td:nth-child(2) {
+	padding-bottom: 5px;
+}
+#comments table textarea {
+	width: 100%;
+	resize: vertical;
+	min-height: 50px;
+}
+#comments .comment {
+	background-color: #FFF;
+	border-radius: 10px;
+	padding: 5px;
+	margin-top: 10px;
+}
+#comments .comment p {
+	white-space: pre-wrap;
+}
+#comments .comment p:nth-child(1) {
+	font-family: "Courier New";
+	white-space: normal;
+}
+#comments .comment p:nth-child(2) {
+	margin-bottom: 0px;
+}

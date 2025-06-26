@@ -1,0 +1,66 @@
+#container {
+	width: 800px;
+}
+#message #titleTable {
+	margin-bottom: 10px;
+}
+#message #titleTable > tbody > tr:nth-child(1) > td:nth-child(1) {
+	vertical-align: top;
+}
+#message #titleTable > tbody > tr:nth-child(1) > td:nth-child(1) > table {
+	padding-right: 10px;
+	min-width: 68px;
+}
+#message #titleTable > tbody > tr:nth-child(1) > td:nth-child(1) > table div {
+	margin: auto;
+	text-align: center;
+}
+#message #titleTable > tbody > tr:nth-child(1) > td:nth-child(2) > h2 {
+	vertical-align: middle;
+	margin-bottom: 0px;
+}
+#message #upvote {
+	height: 20px;
+	width: 20px;
+	border: 1px solid black;
+	border-top-left-radius: 11px;
+	border-top-right-radius: 11px;
+	cursor: pointer;
+}
+#message #upvote.on {
+	background-color: #00ff00;
+}
+#message #upvote.off {
+	background-color: #3d663d;
+}
+#message #downvote {
+	height: 20px;
+	width: 20px;
+	border: 1px solid black;
+	border-bottom-left-radius: 11px;
+	border-bottom-right-radius: 11px;
+	cursor: pointer;
+}
+#message #downvote.on {
+	background-color: #ff0000;
+}
+#message #downvote.off {
+	background-color: #66443d;
+}
+#message #voteScore * {
+	margin-bottom: 2px;
+}
+#message #code {
+	background-color: #FFF;
+	border-radius: 10px;
+	padding: 5px;
+	margin-bottom: 5px;
+}
+#message #code p {
+	white-space: pre-wrap;
+	margin-bottom: 0px
+}
+#message > p {
+	line-height: 25px;
+	margin-bottom: 0px
+}

@@ -1,0 +1,35 @@
+extend simple
+
+block head
+	link(rel="stylesheet", href="/css/register.css")
+	title Register ● OoRT Cloud
+
+block message 
+	#message
+		#registerWarning
+			h3: b ¡¡Warning!!
+			p Please do not reuse username-password pairs from other online accounts. It is a major security risk we cannot test for.
+			p Passwords must contain at least one number, at at least one letter, and be eight characters or more to be accepted.
+		if page.failMessage
+			h3 #{page.failMessage}
+		form(enctype="multipart/form-data" method="POST")
+			table 
+				tr
+					td 
+						p #[b Username:]
+					td
+						input(type="text" name="username")
+				tr
+					td 
+						p #[b Password:]
+					td
+						input(type="password" name="password")
+				tr
+					td 
+						p #[b Re-Type Password:]
+					td
+						input(type="password" name="retype_password")
+				tr
+					td
+					td
+						input(type="submit" value="Register")

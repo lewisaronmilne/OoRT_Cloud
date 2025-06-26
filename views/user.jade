@@ -1,0 +1,22 @@
+extend simple
+
+block head
+	link(rel="stylesheet", href="/css/user.css")
+	title #{page.user.username} ● OoRT Cloud
+
+block message
+	#message
+		h2
+			u #[b ##{page.user.id}] #{page.user.username}
+		#userUploads
+			if page.files.length === 0
+				p The are no uploads by this user.
+			else
+				h3 #[u Uploads:]
+				table 
+					each val, index in page.files
+						tr
+							td
+								p [#{val.voteScore}]
+							td
+								p #[a(href="/file/#{val._id}") #{val.name}]

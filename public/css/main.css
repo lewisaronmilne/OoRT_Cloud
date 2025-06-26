@@ -1,0 +1,18 @@
+body {
+	font-family: "Courier New";
+	background-color: #222;
+	color: #222;
+}
+p {
+	font-family: "Courier New";
+	margin-bottom: 0.5em;
+}
+p.p2 {
+	font-family: "Arial";
+}
+a.boxedlink {
+	padding: 5px;
+	margin-right: 5px; 
+	background-color: #eee;
+	line-height: 35px;
+}

@@ -1,0 +1,26 @@
+extend simple
+
+block head
+	link(rel="stylesheet", href="/css/register.css")
+	title Login ● OoRT Cloud
+
+block message 
+	#message
+		if page.failMessage
+			h3 #{page.failMessage}
+		form(enctype="multipart/form-data" method="POST")
+			table 
+				tr
+					td 
+						p #[b Username:]
+					td
+						input(type="text" name="username")
+				tr
+					td 
+						p #[b Password:]
+					td
+						input(type="password" name="password")
+				tr
+					td
+					td
+						input(type="submit" value="Login")

@@ -1,0 +1,23 @@
+#content {
+	margin: 10px;
+}
+#content h2 {
+	font-size: 30px;
+	margin-bottom: 5px;
+}
+#content h3 {
+	font-size: 20px;
+	margin-bottom: 5px;
+}
+#content #spiel {
+	background-color: #FFF;
+	border-radius: 10px;
+	padding: 5px;
+	margin-bottom: 10px;
+}
+#content #spiel p:last-child {
+	margin-bottom: 0px;
+}
+#content > table > tbody > tr:last-child > td > p {
+	margin-bottom: 0px;	
+}

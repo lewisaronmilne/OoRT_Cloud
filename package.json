@@ -1,0 +1,16 @@
+{
+	"name": "oort-cloud",
+	"version": "0.0.1",
+	"private": "true",
+	"dependencies": {
+		"express": "*",
+		"morgan": "*",
+		"express-session": "*",
+		"formidable": "*",
+		"mongodb": "*",
+		"mongoose": "*",
+		"connect-mongo": "*",
+		"jade": "*",
+		"bcrypt-nodejs": "*"
+	}
+}
