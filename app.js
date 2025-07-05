@@ -13,7 +13,7 @@ mongoose.set("debug", true);
 
 app.set("views", __dirname + "/views");
 app.set("view engine", "pug");
-app.use(express.static(__dirname + "/public"));
+app.use(express.static(__dirname + "/static"));
 app.use(session({
 	name: "sessionToken",
 	secret: "27a17963-96cf-4052-bad7-de4b942f8187",
