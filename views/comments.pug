@@ -17,7 +17,7 @@ link(rel="stylesheet" href="/css/comments.css")
 						input(type="submit" value="Submit")
 	each val, index in page.file.comments
 		.comment
-			p ##{index + 1} by #[a(href="/user/#{val.commenterId._id}/#{val.commenterId.username}") #{val.commenterId.username}] 
+			p ##{index + 1} by #[a(href="/user/" + val.commenterId._id + "/" + val.commenterId.username) #{val.commenterId.username}] 
 				| at #{val.created.getHours() + ":" + ((val.created.getMinutes() < 10) ? "0" : "") + val.created.getMinutes()}
 				| on #{val.created.getDate() + "/" + (val.created.getMonth() + 1)  + "/" + val.created.getFullYear()}
 			p.p2 #{val.text}

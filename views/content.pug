@@ -8,7 +8,7 @@ link(rel="stylesheet" href="/css/content.css")
 					td
 						p [#{val.voteScore}]
 					td
-						p #[a(href="/file/#{val._id}") #{val.name}]
+						p #[a(href="/file/" + val._id) #{val.name}]
 						
 	case page.num
 		when -1

@@ -16,3 +16,5 @@ ToFix
 	Misc. Bugfixing
 Git
 	Figure out what's happening with git removals
+BCrypt
+	Replace

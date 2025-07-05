@@ -1,25 +1,22 @@
-var express = require("express"),
-	morgan = require("morgan"),
-	session = require("express-session"),
-	mongodb = require("mongodb"),
-	mongoose = require("mongoose"),
-	mongoStore = require("connect-mongo")(session);
+const express = require("express");
+const session = require("express-session");
+const mongoose = require("mongoose");
 
-var port = 8080,
-	app = express(),
-	db = require("./app/models");
+const port = 8080;
+const db_url = "mongodb://localhost/oortdb"
 
-mongoose.connect("mongodb://localhost/oortdb");
+const app = express();
+const db = require("./app/models");
+
+mongoose.connect(db_url);
 mongoose.set("debug", true);
 
 app.set("views", __dirname + "/views");
-app.set("view engine", "jade");
-app.use(morgan("dev"));
+app.set("view engine", "pug");
 app.use(express.static(__dirname + "/public"));
 app.use(session({
 	name: "sessionToken",
 	secret: "27a17963-96cf-4052-bad7-de4b942f8187",
-	store: new mongoStore({ mongooseConnection: mongoose.connection }),
 	resave: false,
 	saveUninitialized: false,
 }));
@@ -29,5 +26,4 @@ mongoose.connection.once("open", function()
 {
 	require("./app/routes")(app, db);
 	app.listen(port);
-	console.log("Server listening @ http://localhost:" + port);
 });

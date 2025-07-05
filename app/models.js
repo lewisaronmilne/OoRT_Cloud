@@ -1,5 +1,6 @@
-var mongoose = require("mongoose"),
-	bcrypt = require("bcrypt-nodejs");
+const mongoose = require("mongoose");
+const bcrypt = require("bcrypt-nodejs");
+const common = require("./common")
 
 /////////////////////
 // ~~~ schemas ~~~ //
@@ -54,91 +55,81 @@ var tagSchema = new mongoose.Schema(
 });
 var tags = mongoose.model("tags", tagSchema);
 
-
 ///////////////////////////
 // ~~~ Miscellaneous ~~~ //
 ///////////////////////////
 
-function getNextId(name, done)
+async function getNextId(name, done)
 {
-	counters.findOneAndUpdate(
+	counter = await counters.findOneAndUpdate(
 		{ "_id": name},
 		{ "$inc": { lastId: 1 } }, 
-		{ "upsert": true }, 
-	function(err, counter)
-	{
-		if(counter)
-			return done(counter.lastId + 1);
-		else
-			return done(1);
-	});
+		{ "upsert": true }
+	);
+
+	if(counter)
+		return counter.lastId + 1;
+	else
+		return 1;
 };
 
 ///////////////////
 // ~~~ users ~~~ //
 ///////////////////
 
-function registerUser(username, password, done)
+async function registerUser(username, password, done)
 {
 	if (username === "")
 		return done(new Error("¡¿eRRoR?! Username Field left blank."), null);
 	
-	if (password.length < 8)
-		return done(new Error("¡¿eRRoR?! Password must be eight characters or more."), null);
+	// if (password.length < 8)
+	// 	return done(new Error("¡¿eRRoR?! Password must be eight characters or more."), null);
 
-	if (!password.match(/.*[0-9].*/))
-		return done(new Error("¡¿eRRoR?! Password must contain at least one Number."), null);
+	// if (!password.match(/.*[0-9].*/))
+	// 	return done(new Error("¡¿eRRoR?! Password must contain at least one Number."), null);
 
-	if (!password.match(/.*[a-zA-Z].*/))
-		return done(new Error("¡¿eRRoR?! Password must contain at least one Letter."), null);
+	// if (!password.match(/.*[a-zA-Z].*/))
+	// 	return done(new Error("¡¿eRRoR?! Password must contain at least one Letter."), null);
 
 	username = username.toLowerCase();
-	users.findOne(
-		{ "username": username },
-	function(err, user) 
-	{
-		if (user)
-			return done(new Error("¡¿eRRoR?! Username already taken."), null);
 
-		getNextId("users", function(id)
+	prev_user = await users.findOne({ "username": username });
+	if (prev_user)
+		return done(new Error("¡¿eRRoR?! Username already taken."), null);
+
+	nextUserId = await getNextId("users"); 
+
+	bcrypt.genSalt(10, function(err, salt)
+	{
+		bcrypt.hash(password, salt, null, function(err, hash)
 		{
-			bcrypt.genSalt(10, function(err, salt)
+			user = new users(
 			{
-				bcrypt.hash(password, salt, null, function(err, hash)
-				{
-					new users(
-					{
-						"_id": id,
-						"username": username,
-						"password": hash,
-						"created": new Date(),
-					}).save(function(err, user)
-					{
-						return done(null, user._id)
-					});
-				});
-			});
+				"_id": nextUserId,
+				"username": username,
+				"password": hash,
+				"created": new Date(),
+			}).save();
+
+			return done(null, nextUserId)
 		});
 	});
 };
 
-function loginUser(username, password, done)
+async function loginUser(username, password, done)
 {
 	username = username.toLowerCase();
-	users.findOne(
-		{ "username": username.toLowerCase() },
-	function(err, user)
-	{
-		if (!user)
-			return done(new Error("¡¿eRRoR?! Unknown Username."), null);
+	user = await users.findOne({ "username": username.toLowerCase() });
 
-		bcrypt.compare(password, user.password, function(err, result)
-		{
-			if (result)
-				return done(null, user._id)
-			else
-				return done(new Error("¡¿eRRoR?! Incorrect Password."), null); 
-		});
+	if (!user)
+		return done(new Error("¡¿eRRoR?! Unknown Username."), null);
+
+	bcrypt.compare(password, user.password, function(err, result)
+	{
+		if (result)
+			return done(null, user._id)
+		else
+			return done(new Error("¡¿eRRoR?! Incorrect Password."), null);
 	});
 };
 
@@ -146,7 +137,7 @@ function loginUser(username, password, done)
 // ~~~ files ~~~ //
 ///////////////////
 
-function uploadFile(uploaderId, inName, inLang, inCode, inTags, done)
+async function uploadFile(uploaderId, inName, inLang, inCode, inTags, done)
 {
 	if (inName === "" || inName.match(/^ +$/))
 		return done(new Error("¡¿eRRoR?! Name Field left blank."), null);
@@ -157,132 +148,137 @@ function uploadFile(uploaderId, inName, inLang, inCode, inTags, done)
 	if (inCode === "" || inCode.match(/^ +$/))
 		return done(new Error("¡¿eRRoR?! Code Box left empty."), null);
 
-	getNextId("files", function(id)
-	{
-		var newTags = ["lang:" + inLang.toLowerCase()];
-		for(var t in inTags)
-		{
-			tag = inTags[t].toLowerCase();
-			if (tag !== "" && !tag.match(/.*:.*/) && newTags.indexOf(tag) === -1)
-				newTags.push(tag);
-		}
+	nextFileId = await getNextId("files")
 
-		new files(
-		{
-			"_id": id,
-			"uploaderId": uploaderId,
-			"name": inName,
-			"code": inCode,
-			"tags": newTags,
-			"created": new Date(),
-			"voteScore": 0,
-			"comments": [],
-		}).save(function(err, file)
-		{	
-			users.findOneAndUpdate(
-				{ "_id": uploaderId },
-				{ "$push": { "files.uploaded": file._id } },
-			function(err, user) 
+	var adjTags = common.tagSplit(inTags);
+	var newTags = ["lang:" + inLang.toLowerCase()];
+	for(var t in adjTags)
+	{
+		tag = adjTags[t];
+		if (!tag.match(/.*:.*/))
+			newTags.push(tag);
+	}
+
+	file = new files(
+	{
+		"_id": nextFileId,
+		"uploaderId": uploaderId,
+		"name": inName,
+		"code": inCode,
+		"tags": newTags,
+		"created": new Date(),
+		"voteScore": 0,
+		"comments": [],
+	}).save()
+
+	users.findOneAndUpdate(
+		{ "_id": uploaderId },
+		{ "$push": { "files.uploaded": nextFileId } },
+		{ "upsert": true }
+	).exec();
+
+	for(var t in newTags)
+	{
+		tags.findOneAndUpdate(
+			{ "_id": newTags[t] },
 			{
-				for(var t in newTags)
-				{
-					tags.findOneAndUpdate(
-						{ "_id": newTags[t] },
-						{ 
-							"$push": { "files": file._id },
-							"$inc": { "ammount": 1 }
-						},
-						{ "upsert": true }).exec();
-				}
-				return done(null, file);
-			});
-		});
-	});
+				"$push": { "files": nextFileId },
+				"$inc": { "ammount": 1 }
+			},
+			{ "upsert": true }
+		).exec();
+	}
+
+	return done(null, await file);
 };
 
-function postComment(commenterId, fileId, inText, done)
+async function postComment(commenterId, fileId, inText)
 {
 	if (inText === "" || inText.match(/^ +$/))
-		return done(new Error("¡¿eRRoR?! Comment Box left empty."));
+		return { "success" : false, "message" : "¡¿eRRoR?! Comment Box left empty." };
 
-	files.findOneAndUpdate(
+	await files.findOneAndUpdate(
 		{ "_id": fileId }, 
-		{ "$push": { "comments": { "commenterId": commenterId, "text": inText, "created": new Date()} } },
-	function(err, file) 
-	{
-		return done(null);
-	});
+		{ "$push": { "comments": { "commenterId": commenterId, "text": inText, "created": new Date()} } }
+	);
+
+	return { "success" : true };
 }
 
-function postVote(userId, fileId, inVote, done)
+async function postVote(userId, fileId, inVote)
 {
 	if (!userId)
-		return done(new Error("¡¿eRRoR?! Invalid Login."), null);
+		return { "success" : false, "message" : "¡¿eRRoR?! Invalid Login." };
 
-	users.findOne(
-		{ "_id": userId },
-	function(err, user)
+	user = await users.findOne( { "_id": userId } );
+
+	if (!user)
+		return { "success" : false, "message" : "¡¿eRRoR?! Invalid Login." };
+
+	var vote = { "type": "", "score": 0 },
+		voteChange = 0;
+		upvoted = user.files.upvoted.indexOf(fileId),
+		downvoted = user.files.downvoted.indexOf(fileId);
+
+	if (inVote === "up")
 	{
-		var vote = { "type": "", "score": 0 },
-			voteChange = 0;
-			upvoted = user.files.upvoted.indexOf(fileId),
-			downvoted = user.files.downvoted.indexOf(fileId);
-
-		if (inVote === "up")
+		if (upvoted === -1 && downvoted === -1)
 		{
-			if (downvoted !== -1)
-			{
-				user.files.downvoted.splice(downvoted, 1);
-				voteChange++;
-			}
-
-			if (upvoted !== -1)
-			{
-				vote.type = "neither";
-				user.files.upvoted.splice(upvoted, 1);
-				voteChange--;
-			}
-			else
-			{
-				vote.type = "up";
-				user.files.upvoted.push(fileId);
-				voteChange++;
-			}
-		}
-		else if (inVote === "down")
-		{
-			if (upvoted !== -1)
-			{
-				user.files.upvoted.splice(upvoted, 1);
-				voteChange--;
-			}
-
-			if (downvoted !== -1)
-			{
-				vote.type = "neither";
-				user.files.downvoted.splice(downvoted, 1);
-				voteChange++;
-			}
-			else
-			{
-				vote.type = "down";
-				user.files.downvoted.push(fileId);
-				voteChange--;
-			}
+			vote.type = "up";
+			user.files.upvoted.push(fileId);
+			voteChange++;
 		}
 
-		user.save(function(err)
+		if (upvoted !== -1)
 		{
-			files.findOneAndUpdate(
-				{ "_id": fileId }, 
-				{ "$inc": { voteScore: voteChange } }, 
-			function(err, file)
-			{
-				vote.score = file.voteScore + voteChange;
-				return done(null, vote);
-			});
-		});
-	});	
+			vote.type = "neither";
+			user.files.upvoted.splice(upvoted, 1);
+			voteChange--;
+		}
+
+		if (downvoted !== -1)
+		{
+			vote.type = "up";
+			user.files.upvoted.push(fileId);
+			user.files.downvoted.splice(downvoted, 1);
+			voteChange += 2;
+		}
+	}
+	else if (inVote === "down")
+	{
+		if (upvoted === -1 && downvoted === -1)
+		{
+			vote.type = "down";
+			user.files.downvoted.push(fileId);
+			voteChange--;
+		}
+
+		if (upvoted !== -1)
+		{
+			vote.type = "down";
+			user.files.downvoted.push(fileId);
+			user.files.upvoted.splice(upvoted, 1);
+			voteChange -= 2;
+		}
+
+		if (downvoted !== -1)
+		{
+			vote.type = "neither";
+			user.files.downvoted.splice(downvoted, 1);
+			voteChange++;
+		}
+	}
+
+	await user.save()
+
+	file = await files.findOneAndUpdate(
+		{ "_id": fileId }, 
+		{ "$inc": { voteScore: voteChange } }
+	); 
+
+	vote.score = file.voteScore + voteChange;
+
+	return { "success" : true, "vote": vote };
 }
 
 /////////////////////
@@ -300,24 +296,3 @@ module.exports =
 	"postComment": postComment,
 	"postVote": postVote
 } 
-
-/////////////////////////////
-// ~~~ old token stuff ~~~ //
-/////////////////////////////
-
-// uuid = require("node-uuid"),
-
-// var tokenSchema = new mongoose.Schema(
-// {
-// 	"_id": String,
-// 	"userId": { type: Number, ref: "users" },
-// 	"lastUsed": Date,
-// });
-// var tokens = mongoose.model("tokens", tokenSchema);
-
-// 	new tokens(
-// 	{
-// 		"_id": uuid.v4(),
-// 		"userId": user._id,
-// 		"lastUsed": new Date(),
-// 	})

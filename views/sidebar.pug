@@ -10,4 +10,4 @@ link(rel="stylesheet" href="/css/sidebar.css")
 	h2 
 		u Popular Tags:
 	each val, index in page.sideTags
-		p #[a.boxedlink(href="/?q=#{val._id}") #{val._id}#[b (#{val.ammount})]]
+		p #[a.boxedlink(href="/?q=" + val._id) #{val._id}#[b (#{val.ammount})]]

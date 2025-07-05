@@ -1,5 +1,5 @@
-var fs = require("fs"),
-	formidable = require("formidable");
+const formidable = require("formidable");
+const common = require("./common")
 
 module.exports = function(app, db)
 {
@@ -7,126 +7,110 @@ module.exports = function(app, db)
 	// ~~~ Helper Funtions ~~~ //
 	/////////////////////////////
 
-	function sendPage(req, res, view, pageData)
+	async function sendPage(req, res, view, pageData)
 	{
 		if (["/register","/login","/logout"].indexOf(req.path) === -1)
 			req.session.lastPage = req.originalUrl;
 
 		if (req.session.userId)
 		{
+			user = await db.users.findOne({ "_id": req.session.userId });
 
-			db.users.findOne(
-				{ "_id": req.session.userId },
-			function(err, user)
-			{
-				if (user) 
-					res.render(view, { "page": pageData, "user": user });
-				else 
-					res.render(view, { "page": pageData });
-			});
+			if (user)
+				res.render(view, { "page": pageData, "user": user });
+			else
+				res.render(view, { "page": pageData, "user": null });
 		}
 		else
-			res.render(view, { "page": pageData });
-	}
-
-	function tagSplit(stringTags)
-	{
-		return stringTags
-			.replace(/^[\s,]+|[\s,]+$/gm,"")
-			.split(/[\s,]*,[\s,]*/gm);
+		{
+			res.render(view, { "page": pageData, "user": null });
+		}
 	}
 
 	//////////////////
 	// ~~~ Home ~~~ //
 	//////////////////
 
-	app.get("/", function (req, res)
+	app.get("/", async function (req, res)
 	{
-		db.tags.find().sort({ "ammount": -1 }).limit(10).exec(function (err, sideTags)
-		{
-			if(req.query.q)
-			{
-				var newTags = [];
-				var queryTags = tagSplit(req.query.q);
-				for(var t in queryTags)
-				{
-					tag = queryTags[t].toLowerCase();
-					if (newTags.indexOf(tag) === -1)
-						newTags.push(tag);
-				}
-					
-				db.tags.find(
-				{ 
-					"_id": { "$in": newTags },
-				}, function(err, tags)
-				{
-					if (tags.length < newTags.length || tags.length === 0)
-						sendPage(req, res, "home", { "num": 0, "query": newTags.join(", "), "sideTags": sideTags});
-					else 
-					{
-						var resultIds = tags[0].files;
-						if (tags.length > 1)
-							for (var i = 1; i < tags.length; i++)
-							{
-								resultIds = resultIds.filter(function(value) { return tags[i].files.indexOf(value) !== -1 });
-							}
+		sideTags = await db.tags.find().sort({ "ammount": -1 }).limit(10).exec();
 
-						db.files
-							.find({ "_id": { "$in": resultIds } })
-							.sort({ "voteScore": -1 }).limit(10).exec(function(err, files)
-						{
-							sendPage(req, res, "home", { "num": files.length, "query": newTags.join(", "), "results": files, "sideTags": sideTags });
-						});
-					}
-				});
-			}
-			else
-				db.files.find().sort({ "_id":-1 }).limit(10).exec(function(err, files)
-				{
-					sendPage(req, res, "home", { "num": -1, "results": files, "sideTags": sideTags});
-				});
+		if (!req.query.q)
+		{
+			files = await db.files.find().sort({ "_id":-1 }).limit(10).exec();
+			sendPage(req, res, "home", { "num": -1, "results": files, "sideTags": sideTags});
+			return;
+		}
+
+		var newTags = [];
+		var queryTags = common.tagSplit(req.query.q);
+		for(var t in queryTags)
+		{
+			tag = queryTags[t];
+			if (newTags.indexOf(tag) === -1)
+				newTags.push(tag);
+		}
+
+		tags = await db.tags.find({
+			"_id": { "$in": newTags },
 		});
+
+		if (tags.length < newTags.length || tags.length === 0)
+		{
+			sendPage(req, res, "home", { "num": 0, "query": newTags.join(", "), "sideTags": sideTags});
+			return;
+		}
+
+		var resultIds = tags[0].files;
+		if (tags.length > 1)
+			for (var i = 1; i < tags.length; i++)
+			{
+				resultIds = resultIds.filter(function(value) { return tags[i].files.indexOf(value) !== -1 });
+			}
+
+		files = await db.files.find({ "_id": { "$in": resultIds } }).sort({ "voteScore": -1 }).limit(10).exec()
+
+		sendPage(req, res, "home", { "num": files.length, "query": newTags.join(", "), "results": files, "sideTags": sideTags });
 	});
 
 	//////////////////
 	// ~~~ User ~~~ //
 	//////////////////
 
-	app.get("/user/:userId", function (req, res)
+	app.get("/user/:userId", async function (req, res)
 	{
-		db.users
-			.findOne({ "_id": parseInt(req.params.userId) },
-		function(err, user)
+		user = await db.users.findOne({ "_id": parseInt(req.params.userId) });
+
+		if (!user)
 		{
-			if (user)
-				res.redirect("/user/" + user._id + "/" + user.username);
-			else
-				sendPage(req, res, "404");
-		});
+			sendPage(req, res, "404");
+			return;
+		}
+
+		res.redirect("/user/" + user._id + "/" + user.username);
 	});
 
-	app.get("/user/:userId/:username", function (req, res)
+	app.get("/user/:userId/:username", async function (req, res)
 	{
-		db.users
-			.findOne({ "_id": parseInt(req.params.userId) },
-		function(err, user)
+		user = await db.users.findOne({ "_id": parseInt(req.params.userId) });
+
+		if (!user)
 		{
-			if (user)
-				if (req.params.username === user.username)
-				{
-					db.files
-						.find({ "_id": { "$in": user.files.uploaded } })
-						.sort({ "voteScore":-1 }).limit(10).exec(function(err, files)
-					{
-						sendPage(req, res, "user", { "user": user, "files": files});
-					});
-				}
-				else 
-					res.redirect("/user/" + user._id + "/" + user.username);
-			else 
-				sendPage(req, res, "404");
-			
-		});
+			sendPage(req, res, "404");
+			return;
+		}
+
+		if (req.params.username !== user.username)
+		{
+			res.redirect("/user/" + user._id + "/" + user.username);
+			return;
+		}
+
+		files = await db.files
+			.find({ "_id": { "$in": user.files.uploaded } })
+			.sort({ "voteScore":-1 }).limit(10).exec()
+
+		sendPage(req, res, "user", { "user": user, "files": files});
 	});
 
 	//////////////////////
@@ -138,24 +122,24 @@ module.exports = function(app, db)
 		sendPage(req, res, "register", { "failMessage": "" });
 	});
 
-	app.post("/register", function (req, res)
+	app.post("/register", async function (req, res)
 	{
-		new formidable.IncomingForm().parse(req, function(err, fields) 
+		[fields, not_used] = await new formidable.IncomingForm().parse(req);
+
+		if (fields.password[0] !== fields.retype_password[0])
 		{
-			if (fields.password !== fields.retype_password)
-				sendPage(req, res, "register", { "failMessage": "¡¿eRRoR?! Passwords don't match." });
-			else 
+			sendPage(req, res, "register", { "failMessage": "¡¿eRRoR?! Passwords don't match." });
+			return;
+		}
+
+		db.registerUser(fields.username[0], fields.password[0], function(err, userId)
+		{
+			if (err)
+				sendPage(req, res, "register", { "failMessage": err.message });
+			else
 			{
-				db.registerUser(fields.username, fields.password, function(err, userId)
-				{
-					if (err) 
-						sendPage(req, res, "register", { "failMessage": err.message });
-					else 
-					{
-						req.session.userId = userId;
-						res.redirect(req.session.lastPage ? req.session.lastPage : "/");
-					}
-				});
+				req.session.userId = userId;
+				res.redirect(req.session.lastPage ? req.session.lastPage : "/");
 			}
 		});
 	});
@@ -169,27 +153,25 @@ module.exports = function(app, db)
 		sendPage(req, res, "login", {});
 	});
 
-	app.post("/login", function (req, res)
+	app.post("/login", async function (req, res)
 	{
-		new formidable.IncomingForm().parse(req, function(err, fields) 
+		[fields, not_used] = await new formidable.IncomingForm().parse(req);
+
+		db.loginUser(fields.username[0], fields.password[0], function(err, userId)
 		{
-			db.loginUser(fields.username, fields.password, function(err, userId)
+			if (err) 
+				sendPage(req, res, "login", { "failMessage": err.message });
+			else 
 			{
-				if (err) 
-					sendPage(req, res, "login", { "failMessage": err.message });
-				else 
-				{
-					req.session.userId = userId;
-					res.redirect(req.session.lastPage ? req.session.lastPage : "/");
-				}
-			});
+				req.session.userId = userId;
+				res.redirect(req.session.lastPage ? req.session.lastPage : "/");
+			}
 		});
 	});
 
 	app.get("/logout", function (req, res)
 	{
-		req.session.userId = null;
-		res.clearCookie("sessionToken");
+		delete req.session.userId;
 		res.redirect(req.session.lastPage ? req.session.lastPage : "/");
 	});
 
@@ -197,89 +179,80 @@ module.exports = function(app, db)
 	// ~~~ File Viewer ~~~ //
 	/////////////////////////
 
-	function file(failMessage, req, res)
+	async function file_handle(comment_outcome, req, res)
 	{
-		db.files
+		file = await db.files
 			.findOne({ _id: parseInt(req.params.fileId) })
 			.populate(["uploaderId", "comments.commenterId", "tags"])
-			.exec(function(err, file) 
+			.exec();
+
+		if (!file)
 		{
-			if (file)
-			{
-				db.users.findOne(
-					{ _id: req.session.userId ? req.session.userId : null },
-				function(err, user)
-				{
-						var vote = "neither";
-						if (user)
-						{
-							var upvoted = user.files.upvoted.indexOf(file._id),
-								downvoted = user.files.downvoted.indexOf(file._id);
+			sendPage(req, res, "404");
+			return;
+		}
 
-							if (upvoted !== -1)
-								vote = "up";
-							else if (downvoted !== -1)
-								vote = "down";
-						}
+		user = await db.users.findOne({ _id: req.session.userId ? req.session.userId : null });
 
-						sendPage(req, res, "file", 
-						{ 
-							"file": file, 
-							"vote": vote,
-							"failMessage": failMessage,
-						});
-				});
-			}
-			else
-				sendPage(req, res, "404");
+		var vote = "neither";
+		if (user)
+		{
+			var upvoted = user.files.upvoted.indexOf(file._id);
+			var downvoted = user.files.downvoted.indexOf(file._id);
+
+			if (upvoted !== -1)
+				vote = "up";
+			else if (downvoted !== -1)
+				vote = "down";
+		}
+
+		failMessage = null;
+		if (comment_outcome && !comment_outcome.success)
+			failMessage = comment_outcome.message;
+
+		sendPage(req, res, "file",
+		{
+			"file": file,
+			"vote": vote,
+			"failMessage": failMessage,
 		});
 	}
 
 	app.get("/file/:fileId", function (req, res)
 	{
-		file(null, req, res);
+		file_handle(null, req, res);
 	});
 
 	//////////////////////
 	// ~~~ Comments ~~~ //
 	//////////////////////
 
-	app.post("/file/:fileId", function (req, res)
+	app.post("/file/:fileId", async function (req, res)
 	{
-		if (!req.session.userId)
+		if (!req.session.userId){
 			res.redirect("/file/" + req.params.fileId);
-		else
-		{
-			new formidable.IncomingForm().parse(req, function(err, fields) 
-			{
-				db.postComment(
-					req.session.userId,
-					parseInt(req.params.fileId),
-					fields.comment,
-				function(err)
-				{
-					if (err) 
-						file(err.message, req, res);
-					else 
-						file(null, req, res);
-				});
-			});
+			return;
 		}
+
+		[fields, not_used] = await new formidable.IncomingForm().parse(req);
+
+		outcome = await db.postComment(req.session.userId, parseInt(req.params.fileId[0]), fields.comment[0]);
+
+		file_handle(outcome, req, res);
 	});
 
 	///////////////////////////////
 	// ~~~ Upvotes/Downvotes ~~~ //
 	///////////////////////////////
 
-	function vote(vote, req, res)
+	async function vote(vote, req, res)
 	{
-		db.postVote(req.session.userId, parseInt(req.params.fileId), vote, function(err, result)
-		{
-			if (err)
-				res.send({ "type": "fail", "score": 666 });	
-			else 	
-				res.send(result);
-		});
+		vote_outcome = await db.postVote(req.session.userId, parseInt(req.params.fileId), vote);
+
+		if (!vote_outcome.success)
+			res.send({ "type": "fail", "score": 666 });	
+		else 
+			res.send(vote_outcome.vote);
 	}	
 
 	app.get("/file/:fileId/upvote", function (req, res)
@@ -301,36 +274,37 @@ module.exports = function(app, db)
 		sendPage(req, res, "upload", { "failMessage": "" });
 	});
 
-	app.post("/upload", function (req, res) 
+	app.post("/upload", async function (req, res)
 	{
 		if (!req.session.userId)
-			sendPage(req, res, "upload", { "failMessage": "¡¿eRRoR?! Invalid Login." });
-		else
 		{
-			new formidable.IncomingForm().parse(req, function(err, fields) 
-			{
-				db.uploadFile(
-					req.session.userId,
-					fields.name,
-					fields.lang,
-					fields.code,
-					tagSplit(fields.tags),
-				function(err, file)
-				{
-					if (err) 
-						sendPage(req, res, "upload", { "failMessage": err.message });
-					else 
-						res.redirect("/file/" + file._id);
-				});
-			});
+			sendPage(req, res, "upload", { "failMessage": "¡¿eRRoR?! Invalid Login." });
+			return;
 		}
+
+		[fields, not_used] = await new formidable.IncomingForm().parse(req);
+
+		db.uploadFile(
+			req.session.userId,
+			fields.name[0],
+			fields.lang[0],
+			fields.code[0],
+			fields.tags[0],
+			function(err, file)
+			{
+				if (err)
+					sendPage(req, res, "upload", { "failMessage": err.message });
+				else
+					res.redirect("/file/" + file._id);
+			}
+		);
 	});
 
 	/////////////////
 	// ~~~ 404 ~~~ //
 	/////////////////
 
-	app.get("*", function (req, res)
+	app.get("*splat", function (req, res)
 	{
 		res.status(404);
 		sendPage(req, res, "404");

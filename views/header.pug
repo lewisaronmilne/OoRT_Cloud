@@ -8,7 +8,7 @@ link(rel="stylesheet" href="/css/header.css")
 		if user
 			p
 				| #[a.boxedlink(href="/") Home]#[a.boxedlink(href="/upload") Upload]
-				| #[span Logged in as:]#[a.boxedlink(href="/user/#{user._id}/#{user.username}") #{user.username}]
+				| #[span Logged in as:]#[a.boxedlink(href="/user/" + user._id + "/" + user.username) #{user.username}]
 				| #[a.boxedlink(href="/logout") Logout]
 		else 
 			p

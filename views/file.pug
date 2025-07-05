@@ -37,9 +37,9 @@ block message
 		#code
 			p #{page.file.code}
 		p #[b File id:] ##{page.file._id}
-		p #[b Uploaded by] #[a.boxedlink(href="/user/#{page.file.uploaderId._id}/#{page.file.uploaderId.username}") #{page.file.uploaderId.username}]
+		p #[b Uploaded by] #[a.boxedlink(href="/user/" + page.file.uploaderId._id + "/" + page.file.uploaderId.username) #{page.file.uploaderId.username}]
 		p #[b Tags:]
 			each val, index in page.file.tags
-				| #[a.boxedlink(href="/?q=#{val._id}") #{val._id}#[b (#{val.ammount})]]
+				| #[a.boxedlink(href="/?q=" + val._id) #{val._id}#[b (#{val.ammount})]]
 		- if (user || page.file.comments.length > 0)
 			include comments
