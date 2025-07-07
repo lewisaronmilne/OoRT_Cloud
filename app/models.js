@@ -82,14 +82,14 @@ async function registerUser(username, password, done)
 	if (username === "")
 		return done(new Error("¡¿eRRoR?! Username Field left blank."), null);
 	
-	// if (password.length < 8)
-	// 	return done(new Error("¡¿eRRoR?! Password must be eight characters or more."), null);
+	if (password.length < 8)
+		return done(new Error("¡¿eRRoR?! Password must be eight characters or more."), null);
 
-	// if (!password.match(/.*[0-9].*/))
-	// 	return done(new Error("¡¿eRRoR?! Password must contain at least one Number."), null);
+	if (!password.match(/.*[0-9].*/))
+		return done(new Error("¡¿eRRoR?! Password must contain at least one Number."), null);
 
-	// if (!password.match(/.*[a-zA-Z].*/))
-	// 	return done(new Error("¡¿eRRoR?! Password must contain at least one Letter."), null);
+	if (!password.match(/.*[a-zA-Z].*/))
+		return done(new Error("¡¿eRRoR?! Password must contain at least one Letter."), null);
 
 	username = username.toLowerCase();
 
