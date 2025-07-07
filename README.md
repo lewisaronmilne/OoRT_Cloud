@@ -4,5 +4,5 @@ This is a simple CRUD website I made with JavaScript and Node.js in 2015. It all
 
 The accounts are password secured with bcrypt encryption, and everything is stored in a mongodb database.
 
-![Screeshot](screenshots/home%20page.png)
-![Screeshot](screenshots/fast%20inverse%20square%20root.pngscreenshot.png)
+![Home Page](screenshots/home%20page.png)
+![Code Snippets Page - Fast Inverse Square Root](screenshots/fast%20inverse%20square%20root.png)
